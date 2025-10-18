@@ -1,0 +1,51 @@
+{
+    "msg": "操作成功",
+    "code": 200,
+    "data": {
+        "arbitrageListVos": [
+            {
+                "wxUserId": "1978808406584176641",
+                "fundCode": "501099",
+                "fundName": "平安新兴产业LOF",
+                "type": 0,
+                "openRemind": false,
+                "value": "2.2569",
+                "discount": 2.66,
+                "estimateLimit": -4.38,
+                "currentPrice": 2.317,
+                "increaseRt": -1.07,
+                "updateTime": "2025-10-17T19:15:27",
+                "intoTime": null,
+                "isPause": 0,
+                "info": null,
+                "nav": true,
+                "fallNum": null,
+                "amount": 66.36,
+                "allShare": 838.75,
+                "incrShare": 0
+            },
+            {
+                "wxUserId": "1978808406584176641",
+                "fundCode": "501097",
+                "fundName": "科创国寿LOF",
+                "type": 0,
+                "openRemind": false,
+                "value": "1.4657",
+                "discount": 2.07,
+                "estimateLimit": -4.28,
+                "currentPrice": 1.496,
+                "increaseRt": -2.29,
+                "updateTime": "2025-10-17T20:10:10",
+                "intoTime": null,
+                "isPause": 0,
+                "info": null,
+                "nav": true,
+                "fallNum": null,
+                "amount": 1.96,
+                "allShare": 100.23,
+                "incrShare": 0
+            }
+        ],
+        "updateTime": "10月17日 21:30"
+    }
+}
