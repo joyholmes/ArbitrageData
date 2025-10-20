@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const CronScheduler = require('../../scheduler/cronScheduler');
 const AlertService = require('../../notifier/alertService');
+const FundRepository = require('../../database/fundRepository');
+const fundRepository = new FundRepository();
 const FundCrawler = require('../../crawler/fundCrawler');
 const logger = require('../../utils/logger');
 
@@ -49,12 +51,32 @@ router.post('/crawl', async (req, res) => {
   try {
     logger.info('收到手动抓取请求');
     
-    await cronScheduler.manualCrawl();
+    // 1. 清空所有旧数据
+    logger.info('清空所有旧数据...');
+    await fundRepository.clearAllData();
     
-    res.json({
-      success: true,
-      message: '数据抓取任务已启动'
-    });
+    // 2. 抓取所有类型的数据 (0,1,2,3)
+    logger.info('开始抓取所有类型的数据...');
+    const allFundData = await fundCrawler.fetchAllFundData();
+    
+    if (allFundData && allFundData.length > 0) {
+      // 3. 存储新数据
+      const result = await fundRepository.batchInsert(allFundData);
+      logger.info(`手动抓取完成: 成功 ${result.inserted} 条，跳过 ${result.skipped} 条`);
+      
+      res.json({
+        success: true,
+        message: `数据抓取完成，新增 ${result.inserted} 条数据`,
+        inserted: result.inserted,
+        skipped: result.skipped
+      });
+    } else {
+      logger.warn('手动抓取未获取到数据');
+      res.json({
+        success: true,
+        message: '数据抓取完成，但未获取到数据'
+      });
+    }
 
   } catch (error) {
     logger.error('手动抓取失败:', error);
@@ -192,12 +214,13 @@ router.post('/cleanup', async (req, res) => {
   try {
     const { days = 90 } = req.body;
     
-    // 这里需要调用数据库清理方法
-    // const deletedCount = await fundRepository.cleanOldData(parseInt(days));
+    // 调用真正的数据清理方法
+    const deletedCount = await fundRepository.cleanOldData(parseInt(days));
     
     res.json({
       success: true,
-      message: `数据清理任务已启动，将清理 ${days} 天前的数据`
+      message: `数据清理完成，删除了 ${deletedCount} 条 ${days} 天前的数据`,
+      deletedCount: deletedCount
     });
 
   } catch (error) {

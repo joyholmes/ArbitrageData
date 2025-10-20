@@ -6,8 +6,10 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "node scripts/test.js",
     "init-db": "node scripts/init-database.js",
+    "check-db": "node scripts/check-database.js",
+    "check-status": "node scripts/check-status.js",
+    "quick-check": "node scripts/quick-check.js",
     "deploy": "sudo ./scripts/deploy.sh",
     "start-service": "./scripts/start.sh"
   },

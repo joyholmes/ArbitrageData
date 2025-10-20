@@ -22,6 +22,30 @@ class FundCrawler {
   }
 
   /**
+   * 获取所有类型的基金数据
+   * @returns {Promise<Array>} 所有基金数据数组
+   */
+  async fetchAllFundData() {
+    const allData = [];
+    const types = [0, 1, 2, 3]; // 所有类型
+    
+    for (const type of types) {
+      try {
+        logger.info(`开始抓取基金数据，类型: ${type}`);
+        const typeData = await this.fetchFundData(type);
+        allData.push(...typeData);
+        logger.info(`类型 ${type} 抓取完成，获得 ${typeData.length} 条数据`);
+      } catch (error) {
+        logger.error(`抓取类型 ${type} 数据失败:`, error.message);
+        // 继续抓取其他类型，不中断
+      }
+    }
+    
+    logger.info(`所有类型数据抓取完成，总计 ${allData.length} 条数据`);
+    return allData;
+  }
+
+  /**
    * 获取基金折溢价数据
    * @param {number} type - 基金类型，0表示所有类型
    * @returns {Promise<Array>} 基金数据数组

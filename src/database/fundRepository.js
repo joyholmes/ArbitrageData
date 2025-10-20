@@ -7,6 +7,19 @@ class FundRepository {
   }
 
   /**
+   * 清空所有数据
+   * @returns {Promise<number>} 删除的记录数
+   */
+  async clearAllData() {
+    const sql = `DELETE FROM ${this.tableName}`;
+    const result = await db.query(sql);
+    const deletedCount = result.affectedRows || 0;
+    
+    logger.info(`清空所有数据: 删除了 ${deletedCount} 条记录`);
+    return deletedCount;
+  }
+
+  /**
    * 批量插入基金数据
    * @param {Array} fundDataList - 基金数据数组
    * @returns {Promise<Object>} 插入结果
@@ -26,16 +39,7 @@ class FundRepository {
 
       for (const fundData of fundDataList) {
         try {
-          // 检查是否已存在相同基金和时间的记录
-          const exists = await this.checkExists(fundData.fundCode, fundData.updateTime);
-          
-          if (exists) {
-            skipped++;
-            logger.debug(`跳过重复数据: ${fundData.fundCode} - ${fundData.updateTime}`);
-            continue;
-          }
-
-          // 插入新数据
+          // 直接插入新数据，不检查重复
           await this.insertSingle(fundData);
           inserted++;
           
@@ -217,6 +221,41 @@ class FundRepository {
     const result = await db.query(sql, [days]);
     logger.info(`清理了 ${result.affectedRows} 条过期数据`);
     return result.affectedRows;
+  }
+
+  /**
+   * 删除指定基金的旧数据
+   * @param {string} fundCode - 基金代码
+   * @returns {Promise<number>} 删除的记录数
+   */
+  async deleteOldDataForFund(fundCode) {
+    const sql = `DELETE FROM ${this.tableName} WHERE fund_code = ?`;
+    const result = await db.query(sql, [fundCode]);
+    const deletedCount = result.affectedRows || 0;
+    
+    if (deletedCount > 0) {
+      logger.debug(`删除基金 ${fundCode} 的 ${deletedCount} 条旧数据`);
+    }
+    
+    return deletedCount;
+  }
+
+  /**
+   * 清理旧数据
+   * @param {number} days - 保留天数，默认90天
+   * @returns {Promise<number>} 删除的记录数
+   */
+  async cleanOldData(days = 90) {
+    const sql = `
+      DELETE FROM ${this.tableName} 
+      WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)
+    `;
+    
+    const result = await db.query(sql, [days]);
+    const deletedCount = result.affectedRows || 0;
+    
+    logger.info(`数据清理完成: 删除了 ${deletedCount} 条 ${days} 天前的数据`);
+    return deletedCount;
   }
 }
 
