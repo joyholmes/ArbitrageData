@@ -14,7 +14,15 @@ class Database {
         user: process.env.DB_USER || 'root',
         password: process.env.DB_PASSWORD || '',
         database: process.env.DB_NAME || 'fund_arbitrage',
-        charset: 'utf8mb4'
+        charset: 'utf8mb4',
+        // 添加连接池配置和临时文件处理
+        acquireTimeout: 60000,
+        timeout: 60000,
+        reconnect: true,
+        // 禁用临时文件，使用内存处理
+        multipleStatements: false,
+        // 设置临时目录为当前用户目录
+        tmpdir: process.env.TMPDIR || '/tmp'
       });
       
       logger.info('数据库连接成功');

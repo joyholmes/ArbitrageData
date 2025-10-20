@@ -30,6 +30,58 @@ class FundRepository {
       return { inserted: 0, skipped: 0 };
     }
 
+    let inserted = 0;
+    let skipped = 0;
+
+    // 分批处理，每批50条数据
+    const batchSize = 50;
+    const batches = [];
+    
+    for (let i = 0; i < fundDataList.length; i += batchSize) {
+      batches.push(fundDataList.slice(i, i + batchSize));
+    }
+
+    logger.info(`开始批量插入 ${fundDataList.length} 条数据，分 ${batches.length} 批处理`);
+
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      logger.info(`处理第 ${batchIndex + 1}/${batches.length} 批，共 ${batch.length} 条数据`);
+
+      try {
+        // 使用批量插入SQL，避免单条插入的临时文件问题
+        const result = await this.batchInsertSingle(batch);
+        inserted += result.inserted;
+        skipped += result.skipped;
+        
+      } catch (error) {
+        logger.error(`第 ${batchIndex + 1} 批数据插入失败:`, error);
+        // 如果批量插入失败，尝试单条插入
+        for (const fundData of batch) {
+          try {
+            await this.insertSingle(fundData);
+            inserted++;
+          } catch (singleError) {
+            logger.error(`插入单条数据失败: ${fundData.fundCode}`, singleError);
+            skipped++;
+          }
+        }
+      }
+    }
+
+    logger.info(`数据插入完成: 成功 ${inserted} 条，跳过 ${skipped} 条`);
+    return { inserted, skipped };
+  }
+
+  /**
+   * 批量插入单批数据
+   * @param {Array} batch - 单批数据数组
+   * @returns {Promise<Object>} 插入结果
+   */
+  async batchInsertSingle(batch) {
+    if (!batch || batch.length === 0) {
+      return { inserted: 0, skipped: 0 };
+    }
+
     const connection = db.getConnection();
     let inserted = 0;
     let skipped = 0;
@@ -37,28 +89,55 @@ class FundRepository {
     try {
       await connection.beginTransaction();
 
-      for (const fundData of fundDataList) {
-        try {
-          // 直接插入新数据，不检查重复
-          await this.insertSingle(fundData);
-          inserted++;
-          
-        } catch (error) {
-          logger.error(`插入单条数据失败: ${fundData.fundCode}`, error);
-          skipped++;
-        }
+      // 构建批量插入SQL
+      const sql = `
+        INSERT INTO ${this.tableName} (
+          fund_code, fund_name, type, value, discount, 
+          estimate_limit, current_price, increase_rt, 
+          update_time, open_remind, wx_user_id, into_time,
+          is_pause, info, nav, fall_num, amount, all_share, incr_share, created_at
+        ) VALUES ${batch.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())').join(', ')}
+      `;
+
+      // 构建参数数组
+      const params = [];
+      for (const fundData of batch) {
+        params.push(
+          fundData.fundCode,
+          fundData.fundName,
+          fundData.type,
+          fundData.value,
+          fundData.discount,
+          fundData.estimateLimit,
+          fundData.currentPrice,
+          fundData.increaseRt,
+          fundData.updateTime,
+          fundData.openRemind,
+          fundData.wxUserId,
+          fundData.intoTime,
+          fundData.isPause,
+          fundData.info,
+          fundData.nav,
+          fundData.fallNum,
+          fundData.amount,
+          fundData.allShare,
+          fundData.incrShare
+        );
       }
 
+      await connection.execute(sql, params);
       await connection.commit();
-      logger.info(`数据插入完成: 成功 ${inserted} 条，跳过 ${skipped} 条`);
       
-      return { inserted, skipped };
-      
+      inserted = batch.length;
+      logger.info(`批量插入成功: ${inserted} 条数据`);
+
     } catch (error) {
       await connection.rollback();
-      logger.error('批量插入数据失败:', error);
+      logger.error('批量插入失败:', error);
       throw error;
     }
+
+    return { inserted, skipped };
   }
 
   /**
