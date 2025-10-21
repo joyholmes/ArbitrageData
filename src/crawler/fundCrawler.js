@@ -29,15 +29,27 @@ class FundCrawler {
     const allData = [];
     const types = [0, 1, 2, 3]; // 所有类型
     
-    for (const type of types) {
+    for (let i = 0; i < types.length; i++) {
+      const type = types[i];
       try {
         logger.info(`开始抓取基金数据，类型: ${type}`);
         const typeData = await this.fetchFundData(type);
         allData.push(...typeData);
         logger.info(`类型 ${type} 抓取完成，获得 ${typeData.length} 条数据`);
+        
+        // 如果不是最后一个类型，等待3秒再抓取下一个类型
+        if (i < types.length - 1) {
+          logger.info('等待3秒后抓取下一个类型...');
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
       } catch (error) {
         logger.error(`抓取类型 ${type} 数据失败:`, error.message);
         // 继续抓取其他类型，不中断
+        // 即使失败也要等待，避免请求过于频繁
+        if (i < types.length - 1) {
+          logger.info('等待3秒后抓取下一个类型...');
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
       }
     }
     

@@ -18,13 +18,56 @@ class CronScheduler {
   start() {
     logger.info('启动定时任务调度器');
 
-    // 每天10:00执行数据抓取
-    this.scheduleTask('crawl-10am', process.env.CRON_SCHEDULE_1 || '0 10 * * *', () => {
+    // 9:00到15:00之间每半小时执行数据抓取
+    this.scheduleTask('crawl-9am', '0 9 * * *', () => {
+      this.executeCrawlTask('上午9点数据抓取');
+    });
+    
+    this.scheduleTask('crawl-930am', '30 9 * * *', () => {
+      this.executeCrawlTask('上午9:30数据抓取');
+    });
+    
+    this.scheduleTask('crawl-10am', '0 10 * * *', () => {
       this.executeCrawlTask('上午10点数据抓取');
     });
-
-    // 每天15:00执行数据抓取
-    this.scheduleTask('crawl-3pm', process.env.CRON_SCHEDULE_2 || '0 15 * * *', () => {
+    
+    this.scheduleTask('crawl-1030am', '30 10 * * *', () => {
+      this.executeCrawlTask('上午10:30数据抓取');
+    });
+    
+    this.scheduleTask('crawl-11am', '0 11 * * *', () => {
+      this.executeCrawlTask('上午11点数据抓取');
+    });
+    
+    this.scheduleTask('crawl-1130am', '30 11 * * *', () => {
+      this.executeCrawlTask('上午11:30数据抓取');
+    });
+    
+    this.scheduleTask('crawl-12pm', '0 12 * * *', () => {
+      this.executeCrawlTask('中午12点数据抓取');
+    });
+    
+    this.scheduleTask('crawl-1230pm', '30 12 * * *', () => {
+      this.executeCrawlTask('中午12:30数据抓取');
+    });
+    
+    this.scheduleTask('crawl-1pm', '0 13 * * *', () => {
+      this.executeCrawlTask('下午1点数据抓取');
+    });
+    
+    this.scheduleTask('crawl-130pm', '30 13 * * *', () => {
+      this.executeCrawlTask('下午1:30数据抓取');
+    });
+    
+    this.scheduleTask('crawl-2pm', '0 14 * * *', () => {
+      this.executeCrawlTask('下午2点数据抓取');
+    });
+    
+    this.scheduleTask('crawl-230pm', '30 14 * * *', () => {
+      this.executeCrawlTask('下午2:30数据抓取');
+    });
+    
+    this.scheduleTask('crawl-3pm', '0 15 * * *', () => {
       this.executeCrawlTask('下午3点数据抓取');
     });
 
