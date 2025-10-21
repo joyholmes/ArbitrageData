@@ -91,8 +91,13 @@ class CronScheduler {
     logger.info(`开始执行${taskDescription}`);
 
     try {
-      // 抓取数据
-      const fundData = await this.crawler.fetchFundData();
+      // 1. 清空所有旧数据
+      logger.info('清空所有旧数据...');
+      await this.repository.clearAllData();
+
+      // 2. 抓取所有类型的数据 (0,1,2,3)
+      logger.info('开始抓取所有类型的数据...');
+      const fundData = await this.crawler.fetchAllFundData();
       
       if (!fundData || fundData.length === 0) {
         logger.warn('未获取到基金数据');
