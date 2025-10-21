@@ -42,7 +42,7 @@ async function initDatabase() {
         type INT NOT NULL DEFAULT 0 COMMENT '基金类型（0=LOF基金，1=ETF基金，2=其他类型，3=特殊类型）',
         value DECIMAL(10,4) NOT NULL DEFAULT 0.0000 COMMENT '估值/净值（如1.0274、3.0519）',
         discount DECIMAL(5,2) NOT NULL DEFAULT 0.00 COMMENT '溢价率/折价率（如0.94%、-0.86%，正值表示溢价，负值表示折价）',
-        estimate_limit DECIMAL(5,2) NOT NULL DEFAULT 0.00 COMMENT '估值上下限阈值（用于提醒设置）',
+        estimate_limit DECIMAL(5,2) NOT NULL DEFAULT 0.00 COMMENT '估值涨跌幅（估值/净值列的百分比，如2.52%）',
         current_price DECIMAL(10,3) NOT NULL DEFAULT 0.000 COMMENT '场内价格/当前交易价格（如1.037、3.078）',
         increase_rt DECIMAL(5,2) NOT NULL DEFAULT 0.00 COMMENT '场内价格涨跌幅（如4.33%、1.82%）',
         update_time DATETIME NOT NULL COMMENT '数据更新时间（API返回的原始时间）',

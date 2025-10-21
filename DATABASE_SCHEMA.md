@@ -25,7 +25,8 @@
 
 | 字段名 | 类型 | 说明 | 示例值 | 对应表格列 |
 |--------|------|------|--------|------------|
-| `increase_rt` | DECIMAL(5,2) | 场内价格涨跌幅 | 4.33, 1.82 | 场内价格列的百分比 |
+| `increase_rt` | DECIMAL(5,2) | 场内价格涨跌幅 | 4.02, 1.82 | 场内价格列的百分比 |
+| `estimate_limit` | DECIMAL(5,2) | 估值涨跌幅（估值/净值列的百分比） | 2.52, 1.71 | 估值/净值列的百分比 |
 | `fall_num` | DECIMAL(10,2) | 跌幅次数或跌幅数值 | 3/5, 7/8, 5/10 | 可能包含分数的跌幅数据 |
 
 ### 交易和份额字段
@@ -68,6 +69,46 @@
 3. **溢价率** → `discount`（红色显示正值，绿色显示负值）
 4. **场内价格** → `current_price`
 5. **自选开关** → `open_remind`
+
+### 实际数据示例
+
+根据红土精选基金的实际数据：
+
+```json
+{
+  "wxUserId": "1978808406584176641",
+  "fundCode": "168401",
+  "fundName": "红土精选",
+  "type": 0,
+  "openRemind": false,
+  "value": "3.2938",
+  "discount": 1.22,
+  "estimateLimit": 2.52,
+  "currentPrice": 3.334,
+  "increaseRt": 4.02,
+  "updateTime": "2025-10-21T11:31:13",
+  "intoTime": null,
+  "isPause": 0,
+  "info": null,
+  "nav": false,
+  "fallNum": null,
+  "amount": 53.49,
+  "allShare": 910.18,
+  "incrShare": 0
+}
+```
+
+**字段对应关系**：
+- `fund_code`: "168401" → 基金代码
+- `fund_name`: "红土精选" → 基金名称
+- `value`: "3.2938" → 估值/净值（3.2938）
+- `discount`: 1.22 → 溢价率（1.22%，红色显示）
+- `current_price`: 3.334 → 场内价格（3.334）
+- `increase_rt`: 4.02 → 场内价格涨跌幅（4.02%，红色显示）
+- `estimate_limit`: 2.52 → 估值涨跌幅（2.52%，红色显示）
+- `amount`: 53.49 → 交易金额
+- `all_share`: 910.18 → 总份额
+- `incr_share`: 0 → 增量份额
 
 ### 数据类型说明
 
