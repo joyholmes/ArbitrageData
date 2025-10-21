@@ -43,50 +43,50 @@ router.get('/status', async (req, res) => {
   }
 });
 
-/**
- * 手动触发数据抓取
- * POST /api/system/crawl
- */
-router.post('/crawl', async (req, res) => {
-  try {
-    logger.info('收到手动抓取请求');
-    
-    // 1. 清空所有旧数据
-    logger.info('清空所有旧数据...');
-    await fundRepository.clearAllData();
-    
-    // 2. 抓取所有类型的数据 (0,1,2,3)
-    logger.info('开始抓取所有类型的数据...');
-    const allFundData = await fundCrawler.fetchAllFundData();
-    
-    if (allFundData && allFundData.length > 0) {
-      // 3. 存储新数据
-      const result = await fundRepository.batchInsert(allFundData);
-      logger.info(`手动抓取完成: 成功 ${result.inserted} 条，跳过 ${result.skipped} 条`);
-      
-      res.json({
-        success: true,
-        message: `数据抓取完成，新增 ${result.inserted} 条数据`,
-        inserted: result.inserted,
-        skipped: result.skipped
-      });
-    } else {
-      logger.warn('手动抓取未获取到数据');
-      res.json({
-        success: true,
-        message: '数据抓取完成，但未获取到数据'
+  /**
+   * 手动触发数据抓取
+   * POST /api/system/crawl
+   */
+  router.post('/crawl', async (req, res) => {
+    try {
+      logger.info('收到手动抓取请求');
+
+      // 1. 清空所有旧数据
+      logger.info('清空所有旧数据...');
+      await fundRepository.clearAllData();
+
+      // 2. 抓取所有类型的数据 (0,1,2,3)
+      logger.info('开始抓取所有类型的数据...');
+      const allFundData = await fundCrawler.fetchAllFundData();
+
+      if (allFundData && allFundData.length > 0) {
+        // 3. 存储新数据
+        const result = await fundRepository.batchInsert(allFundData);
+        logger.info(`手动抓取完成: 成功 ${result.inserted} 条，跳过 ${result.skipped} 条`);
+
+        res.json({
+          success: true,
+          message: `数据抓取完成，新增 ${result.inserted} 条数据`,
+          inserted: result.inserted,
+          skipped: result.skipped
+        });
+      } else {
+        logger.warn('手动抓取未获取到数据');
+        res.json({
+          success: true,
+          message: '数据抓取完成，但未获取到数据'
+        });
+      }
+
+    } catch (error) {
+      logger.error('手动抓取失败:', error);
+      res.status(500).json({
+        success: false,
+        error: '手动抓取失败',
+        message: error.message
       });
     }
-
-  } catch (error) {
-    logger.error('手动抓取失败:', error);
-    res.status(500).json({
-      success: false,
-      error: '手动抓取失败',
-      message: error.message
-    });
-  }
-});
+  });
 
 /**
  * 测试API连接

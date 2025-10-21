@@ -11,12 +11,18 @@ class FundRepository {
    * @returns {Promise<number>} 删除的记录数
    */
   async clearAllData() {
-    const sql = `DELETE FROM ${this.tableName}`;
-    const result = await db.query(sql);
-    const deletedCount = result.affectedRows || 0;
+    const pool = db.getConnection();
     
-    logger.info(`清空所有数据: 删除了 ${deletedCount} 条记录`);
-    return deletedCount;
+    try {
+      // 使用 TRUNCATE 命令，不会产生临时文件
+      await pool.execute(`TRUNCATE TABLE ${this.tableName}`);
+      
+      logger.info(`清空所有数据: 使用 TRUNCATE 清空表`);
+      return 0; // TRUNCATE 不返回删除的行数
+    } catch (error) {
+      logger.error('清空数据失败:', error);
+      throw error;
+    }
   }
 
   /**
@@ -33,38 +39,24 @@ class FundRepository {
     let inserted = 0;
     let skipped = 0;
 
-    // 分批处理，每批50条数据
-    const batchSize = 50;
-    const batches = [];
-    
-    for (let i = 0; i < fundDataList.length; i += batchSize) {
-      batches.push(fundDataList.slice(i, i + batchSize));
-    }
+    logger.info(`开始逐条插入 ${fundDataList.length} 条数据`);
 
-    logger.info(`开始批量插入 ${fundDataList.length} 条数据，分 ${batches.length} 批处理`);
-
-    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-      const batch = batches[batchIndex];
-      logger.info(`处理第 ${batchIndex + 1}/${batches.length} 批，共 ${batch.length} 条数据`);
-
+    // 直接逐条插入，避免任何可能导致临时文件的操作
+    for (let i = 0; i < fundDataList.length; i++) {
+      const fundData = fundDataList[i];
       try {
-        // 使用批量插入SQL，避免单条插入的临时文件问题
-        const result = await this.batchInsertSingle(batch);
-        inserted += result.inserted;
-        skipped += result.skipped;
+        // 使用最简单的插入方法
+        await this.insertSingle(fundData);
+        inserted++;
+        
+        // 每插入10条数据显示一次进度
+        if ((i + 1) % 10 === 0) {
+          logger.info(`已插入 ${i + 1}/${fundDataList.length} 条数据`);
+        }
         
       } catch (error) {
-        logger.error(`第 ${batchIndex + 1} 批数据插入失败:`, error);
-        // 如果批量插入失败，尝试单条插入
-        for (const fundData of batch) {
-          try {
-            await this.insertSingle(fundData);
-            inserted++;
-          } catch (singleError) {
-            logger.error(`插入单条数据失败: ${fundData.fundCode}`, singleError);
-            skipped++;
-          }
-        }
+        logger.error(`插入第 ${i + 1} 条数据失败: ${fundData.fundCode}`, error);
+        skipped++;
       }
     }
 
@@ -146,38 +138,18 @@ class FundRepository {
    * @returns {Promise<void>}
    */
   async insertSingle(fundData) {
-    const sql = `
-      INSERT INTO ${this.tableName} (
-        fund_code, fund_name, type, value, discount, 
-        estimate_limit, current_price, increase_rt, 
-        update_time, open_remind, wx_user_id, into_time,
-        is_pause, info, nav, fall_num, amount, all_share, incr_share, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-    `;
+    const pool = db.getConnection();
+    
+    const sql = `INSERT INTO ${this.tableName} (fund_code, fund_name, type, value, discount, estimate_limit, current_price, increase_rt, update_time, open_remind, wx_user_id, into_time, is_pause, info, nav, fall_num, amount, all_share, incr_share, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`;
 
     const params = [
-      fundData.fundCode,
-      fundData.fundName,
-      fundData.type,
-      fundData.value,
-      fundData.discount,
-      fundData.estimateLimit,
-      fundData.currentPrice,
-      fundData.increaseRt,
-      fundData.updateTime,
-      fundData.openRemind,
-      fundData.wxUserId,
-      fundData.intoTime,
-      fundData.isPause,
-      fundData.info,
-      fundData.nav,
-      fundData.fallNum,
-      fundData.amount,
-      fundData.allShare,
-      fundData.incrShare
+      fundData.fundCode, fundData.fundName, fundData.type, fundData.value, fundData.discount,
+      fundData.estimateLimit, fundData.currentPrice, fundData.increaseRt, fundData.updateTime,
+      fundData.openRemind, fundData.wxUserId, fundData.intoTime, fundData.isPause, fundData.info,
+      fundData.nav, fundData.fallNum, fundData.amount, fundData.allShare, fundData.incrShare
     ];
 
-    await db.query(sql, params);
+    await pool.execute(sql, params);
   }
 
   /**
