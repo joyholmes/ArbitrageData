@@ -44,7 +44,12 @@ class FundCrawler {
         }
       } catch (error) {
         logger.error(`抓取类型 ${type} 数据失败:`, error.message);
-        // 继续抓取其他类型，不中断
+        // 如果是第一个类型失败，直接抛出错误
+        if (i === 0) {
+          throw error;
+        }
+        // 其他类型失败时继续，但记录错误
+        logger.warn(`类型 ${type} 抓取失败，继续抓取其他类型`);
         // 即使失败也要等待，避免请求过于频繁
         if (i < types.length - 1) {
           logger.info('等待3秒后抓取下一个类型...');
@@ -84,6 +89,21 @@ class FundCrawler {
         return [];
       }
       
+      // 首先检查API是否返回错误信息
+      logger.info(`API返回数据: code=${data.code}, msg=${data.msg}`);
+      
+      if (data.code && data.code !== 200 && data.code !== 0) {
+        const errorMsg = data.msg || '未知错误';
+        logger.error(`API返回错误: 代码=${data.code}, 消息=${errorMsg}`);
+        throw new Error(`API错误: ${errorMsg} (代码: ${data.code})`);
+      }
+      
+      // 检查是否有错误消息但没有错误代码的情况
+      if (data.msg && (data.msg.includes('访问太过频繁') || data.msg.includes('请稍后再试'))) {
+        logger.error(`API访问限制: ${data.msg}`);
+        throw new Error(`API访问限制: ${data.msg}`);
+      }
+      
       // 处理API返回的数据格式
       let fundData = [];
       if (data && data.data && data.data.arbitrageListVos && Array.isArray(data.data.arbitrageListVos)) {
@@ -98,7 +118,22 @@ class FundCrawler {
       } else {
         logger.warn('API返回数据格式异常，期望包含arbitrageListVos数组的格式');
         logger.info('实际返回的数据结构:', JSON.stringify(data, null, 2));
-        return [];
+        
+        // 尝试其他可能的数据结构
+        if (data && typeof data === 'object') {
+          logger.info('尝试查找其他可能的数据字段...');
+          for (const key in data) {
+            if (Array.isArray(data[key])) {
+              logger.info(`找到数组字段: ${key}, 长度: ${data[key].length}`);
+              fundData = data[key];
+              break;
+            }
+          }
+        }
+        
+        if (fundData.length === 0) {
+          return [];
+        }
       }
 
       logger.info(`成功抓取到 ${fundData.length} 条基金数据`);

@@ -80,11 +80,22 @@ router.get('/status', async (req, res) => {
 
     } catch (error) {
       logger.error('手动抓取失败:', error);
-      res.status(500).json({
-        success: false,
-        error: '手动抓取失败',
-        message: error.message
-      });
+      
+      // 检查是否是API错误
+      if (error.message.includes('API错误:')) {
+        res.status(400).json({
+          success: false,
+          error: 'API访问失败',
+          message: error.message,
+          details: '请检查token是否有效，或API是否有限制'
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: '手动抓取失败',
+          message: error.message
+        });
+      }
     }
   });
 
