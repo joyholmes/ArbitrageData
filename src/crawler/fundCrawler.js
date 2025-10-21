@@ -37,10 +37,10 @@ class FundCrawler {
         allData.push(...typeData);
         logger.info(`类型 ${type} 抓取完成，获得 ${typeData.length} 条数据`);
         
-        // 如果不是最后一个类型，等待3秒再抓取下一个类型
+        // 如果不是最后一个类型，等待60秒再抓取下一个类型
         if (i < types.length - 1) {
-          logger.info('等待3秒后抓取下一个类型...');
-          await new Promise(resolve => setTimeout(resolve, 3000));
+          logger.info('等待60秒后抓取下一个类型...');
+          await new Promise(resolve => setTimeout(resolve, 60000));
         }
       } catch (error) {
         logger.error(`抓取类型 ${type} 数据失败:`, error.message);
@@ -52,8 +52,8 @@ class FundCrawler {
         logger.warn(`类型 ${type} 抓取失败，继续抓取其他类型`);
         // 即使失败也要等待，避免请求过于频繁
         if (i < types.length - 1) {
-          logger.info('等待3秒后抓取下一个类型...');
-          await new Promise(resolve => setTimeout(resolve, 3000));
+          logger.info('等待60秒后抓取下一个类型...');
+          await new Promise(resolve => setTimeout(resolve, 60000));
         }
       }
     }
