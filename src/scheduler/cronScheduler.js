@@ -18,7 +18,7 @@ class CronScheduler {
   start() {
     logger.info('启动定时任务调度器');
 
-    // 每天5次数据抓取：9:00, 9:30, 10:30, 14:00, 14:30
+    // 每天6次数据抓取：9:00, 9:30, 10:30, 14:00, 14:30, 20:00
     this.scheduleTask('crawl-9am', '0 9 * * *', () => {
       this.executeCrawlTask('上午9点数据抓取');
     });
@@ -37,6 +37,10 @@ class CronScheduler {
     
     this.scheduleTask('crawl-230pm', '30 14 * * *', () => {
       this.executeCrawlTask('下午2:30数据抓取');
+    });
+
+    this.scheduleTask('crawl-8pm', '0 20 * * *', () => {
+      this.executeCrawlTask('晚上8点数据抓取');
     });
 
     // 每天23:00清理过期数据
