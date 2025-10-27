@@ -18,29 +18,66 @@ class CronScheduler {
   start() {
     logger.info('启动定时任务调度器');
 
-    // 每天6次数据抓取：9:00, 9:30, 10:30, 14:00, 14:30, 23:00
+    // 开盘时间（9:00-15:00）每小时执行一次
     this.scheduleTask('crawl-9am', '0 9 * * *', () => {
       this.executeCrawlTask('上午9点数据抓取');
     });
 
-    this.scheduleTask('crawl-930am', '30 9 * * *', () => {
-      this.executeCrawlTask('上午9:30数据抓取');
+    this.scheduleTask('crawl-10am', '0 10 * * *', () => {
+      this.executeCrawlTask('上午10点数据抓取');
     });
 
-    this.scheduleTask('crawl-1030am', '30 10 * * *', () => {
-      this.executeCrawlTask('上午10:30数据抓取');
+    this.scheduleTask('crawl-11am', '0 11 * * *', () => {
+      this.executeCrawlTask('上午11点数据抓取');
     });
-    
+
+    this.scheduleTask('crawl-12pm', '0 12 * * *', () => {
+      this.executeCrawlTask('中午12点数据抓取');
+    });
+
+    this.scheduleTask('crawl-1pm', '0 13 * * *', () => {
+      this.executeCrawlTask('下午1点数据抓取');
+    });
+
     this.scheduleTask('crawl-2pm', '0 14 * * *', () => {
       this.executeCrawlTask('下午2点数据抓取');
     });
-    
-    this.scheduleTask('crawl-230pm', '30 14 * * *', () => {
-      this.executeCrawlTask('下午2:30数据抓取');
+
+    this.scheduleTask('crawl-3pm', '0 15 * * *', () => {
+      this.executeCrawlTask('下午3点数据抓取');
+    });
+
+    // 收盘时间（15:00-9:00）每两小时执行一次
+    this.scheduleTask('crawl-5pm', '0 17 * * *', () => {
+      this.executeCrawlTask('下午5点数据抓取');
+    });
+
+    this.scheduleTask('crawl-7pm', '0 19 * * *', () => {
+      this.executeCrawlTask('晚上7点数据抓取');
+    });
+
+    this.scheduleTask('crawl-9pm', '0 21 * * *', () => {
+      this.executeCrawlTask('晚上9点数据抓取');
     });
 
     this.scheduleTask('crawl-11pm', '0 23 * * *', () => {
       this.executeCrawlTask('晚上11点数据抓取');
+    });
+
+    this.scheduleTask('crawl-1am', '0 1 * * *', () => {
+      this.executeCrawlTask('凌晨1点数据抓取');
+    });
+
+    this.scheduleTask('crawl-3am', '0 3 * * *', () => {
+      this.executeCrawlTask('凌晨3点数据抓取');
+    });
+
+    this.scheduleTask('crawl-5am', '0 5 * * *', () => {
+      this.executeCrawlTask('凌晨5点数据抓取');
+    });
+
+    this.scheduleTask('crawl-7am', '0 7 * * *', () => {
+      this.executeCrawlTask('早上7点数据抓取');
     });
 
     // 每天23:00清理过期数据
